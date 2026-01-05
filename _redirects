@@ -1,0 +1,15 @@
+# Netlify Redirects File
+# This file handles client-side routing for the SPA
+
+# Redirect all routes to index.html (for client-side routing)
+/*    /index.html   200
+
+# Specific page redirects (optional, for cleaner URLs)
+/login    /login.html    200
+/search   /search.html    200
+/add-customer    /add-customer.html    200
+/reports  /reports.html   200
+
+# API proxy (if backend is on same domain)
+# /api/*  https://your-backend-url.com/api/:splat  200
+

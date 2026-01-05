@@ -65,7 +65,7 @@
         .stat-card-pro {
             background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
             border-radius: 20px;
-            padding: 2rem;
+            padding: 1rem;
             color: white;
             position: relative;
             overflow: hidden;
@@ -307,59 +307,71 @@
             <!-- Dashboard Content -->
             <main class="flex-1 overflow-y-auto p-3 sm:p-6">
                 <!-- Subscription Website Banner -->
-                <div class="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 rounded-2xl shadow-2xl p-6 sm:p-8 mb-6 sm:mb-8 text-white overflow-hidden relative">
-                    <!-- Decorative Background Elements -->
-                    <div class="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full -mr-32 -mt-32"></div>
-                    <div class="absolute bottom-0 left-0 w-48 h-48 bg-white opacity-5 rounded-full -ml-24 -mb-24"></div>
+                <div class="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 
+            rounded-2xl shadow-2xl p-6 sm:p-8 mb-6 sm:mb-8 
+            text-white overflow-hidden relative">
+
+    <!-- Decorative Background -->
+    <div class="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full -mr-32 -mt-32"></div>
+    <div class="absolute bottom-0 left-0 w-48 h-48 bg-white opacity-5 rounded-full -ml-24 -mb-24"></div>
+
+    <!-- ✅ WIDTH MATCHES CARDS -->
+    <div class="relative z-10 max-w-2xl mx-auto">
+
+        <!-- Layout -->
+        <div class="flex flex-col lg:flex-row items-center 
+                    justify-center lg:justify-between gap-6">
+
+            <!-- Logo + Brand -->
+            <div class="flex items-center space-x-6">
+                <div class="bg-white bg-opacity-15 backdrop-blur-sm p-5 sm:p-6 
+                            rounded-2xl border border-white border-opacity-25 shadow-xl">
                     
-                    <div class="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-6">
-                        <div class="flex items-center space-x-6 flex-1">
-                            <!-- Logo Section -->
-                            <div class="bg-white bg-opacity-15 backdrop-blur-sm p-5 sm:p-6 rounded-2xl border border-white border-opacity-25 shadow-xl">
-                                <div class="flex items-center space-x-1 mb-2">
-                                    <span class="text-4xl sm:text-5xl font-black text-blue-300 drop-shadow-lg">S</span>
-                                    <span class="text-4xl sm:text-5xl font-black text-pink-300 drop-shadow-lg">S</span>
-                                    <span class="text-4xl sm:text-5xl font-black text-orange-300 drop-shadow-lg">C</span>
-                                    <span class="text-4xl sm:text-5xl font-black text-blue-300 drop-shadow-lg">B</span>
-                                    <span class="text-4xl sm:text-5xl font-black text-pink-300 drop-shadow-lg">P</span>
-                                    <span class="text-4xl sm:text-5xl font-black text-orange-300 drop-shadow-lg">L</span>
-                                </div>
-                                <div class="flex flex-wrap items-center gap-x-1.5 text-xs sm:text-sm font-semibold">
-                                    <span class="text-blue-200">Sri</span>
-                                    <span class="text-pink-200">Sai</span>
-                                    <span class="text-orange-200">Cable</span>
-                                    <span class="text-blue-200">and</span>
-                                    <span class="text-pink-200">Broadband</span>
-                                    <span class="text-orange-200">Pvt,</span>
-                                    <span class="text-blue-200">Ltd</span>
-                                </div>
-                            </div>
-                            
-                            <!-- Content Section -->
-                            <div class="flex-1">
-                                <div class="flex items-center space-x-3">
-                                    <i class="fas fa-tv text-2xl sm:text-3xl text-white"></i>
-                                    <h3 class="text-2xl sm:text-3xl font-bold text-white drop-shadow-md">Customer Subscription Portal</h3>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Action Button -->
-                        <div class="flex-shrink-0">
-                            <button 
-                                onclick="openSubscriptionWebsite()" 
-                                class="group w-full sm:w-auto px-8 py-4 bg-white text-blue-600 font-bold rounded-xl hover:bg-blue-50 active:bg-blue-100 focus:outline-none focus:ring-4 focus:ring-white focus:ring-opacity-50 transition-all shadow-2xl hover:shadow-3xl transform hover:-translate-y-1 hover:scale-105 active:scale-100 flex items-center justify-center space-x-2"
-                            >
-                                <i class="fas fa-external-link-alt text-lg group-hover:translate-x-1 transition-transform"></i>
-                                <span class="text-base sm:text-lg">Open Portal</span>
-                                <i class="fas fa-arrow-right text-sm group-hover:translate-x-1 transition-transform"></i>
-                            </button>
-                        </div>
+                    <div class="flex items-center space-x-1 mb-2">
+                        <span class="text-4xl sm:text-5xl font-black text-blue-300">S</span>
+                        <span class="text-4xl sm:text-5xl font-black text-pink-300">S</span>
+                        <span class="text-4xl sm:text-5xl font-black text-orange-300">C</span>
+                        <span class="text-4xl sm:text-5xl font-black text-blue-300">B</span>
+                        <span class="text-4xl sm:text-5xl font-black text-pink-300">P</span>
+                        <span class="text-4xl sm:text-5xl font-black text-orange-300">L</span>
+                    </div>
+
+                    <div class="flex flex-wrap gap-x-1.5 text-xs sm:text-sm font-semibold">
+                        <span class="text-blue-200">Sri</span>
+                        <span class="text-pink-200">Sai</span>
+                        <span class="text-orange-200">Cable</span>
+                        <span class="text-blue-200">and</span>
+                        <span class="text-pink-200">Broadband</span>
+                        <span class="text-orange-200">Pvt,</span>
+                        <span class="text-blue-200">Ltd</span>
                     </div>
                 </div>
+            </div>
+
+            <!-- ✅ Button -->
+            <div class="flex justify-center">
+                <button 
+                    onclick="openSubscriptionWebsite()" 
+                    class="group px-8 py-4 bg-white text-blue-600 font-bold rounded-xl
+                           hover:bg-blue-50 active:bg-blue-100
+                           focus:outline-none focus:ring-4 focus:ring-white/50
+                           transition-all shadow-2xl hover:shadow-3xl
+                           transform hover:-translate-y-1 hover:scale-105 active:scale-100
+                           flex items-center space-x-2"
+                >
+                    <i class="fas fa-external-link-alt text-lg"></i>
+                    <span class="text-base sm:text-lg">Open Portal</span>
+                    <i class="fas fa-arrow-right text-sm"></i>
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
 
                 <!-- Statistics Cards -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6 section-spacing">
+                <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 section-spacing">
+
                     <!-- Total Customers Card -->
                     <div class="stat-card-pro fade-in-up" onclick="viewCustomersByStatus('all')" style="animation-delay: 0.1s;">
                         <div class="relative z-10">

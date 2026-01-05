@@ -38,16 +38,15 @@
         left: 0;
     }
 
-    /* Fix main layout so it scrolls naturally on mobile
-       (overrides Tailwind h-screen + overflow-hidden) */
-    .flex.h-screen.overflow-hidden {
+    /* Fix main layout so it scrolls naturally on mobile */
+    .main-content-wrapper {
         height: auto !important;
         min-height: 100vh;
         overflow: visible !important;
+        width: 100%;
     }
     
     /* Main content full width on mobile */
-    .main-content-wrapper,
     .flex-1.flex.flex-col.overflow-hidden {
         width: 100%;
     }
@@ -151,6 +150,20 @@
     
     h2 {
         font-size: 1.25rem !important;
+    }
+
+    /* Limit very large icons so they don't overflow on tiny screens */
+    .stat-card-pro i,
+    .customer-card-pro i,
+    .pro-card i {
+        font-size: 1.3rem !important;
+    }
+
+    /* Ensure label + icon rows can wrap instead of forcing overflow */
+    .customer-card-pro .flex,
+    .stat-card-pro .flex,
+    .search-box-pro .flex {
+        min-width: 0;
     }
     
     /* Stack action buttons */

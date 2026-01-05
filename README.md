@@ -397,9 +397,5 @@ If you encounter issues:
 
 ## 📄 License
 
-This project is for internal use only.
-
----
-
-**Built with ❤️ for SSC Bethigal Cable Network**
+This project is for internal use only
 

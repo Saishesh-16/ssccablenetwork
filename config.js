@@ -5,17 +5,16 @@
 
 window.APP_CONFIG = {
   // API Base URL - Update this for production
-  // For Netlify: Set this to your backend URL (e.g., 'https://your-backend.herokuapp.com/api')
-  // Or set NETLIFY_API_URL environment variable in Netlify dashboard
+  // For Netlify: Set VITE_API_URL in Netlify dashboard under Build & Deploy > Environment
   API_URL: (() => {
-    // Check for environment variable (set in Netlify dashboard)
-    if (typeof process !== 'undefined' && process.env && process.env.NETLIFY_API_URL) {
-      return process.env.NETLIFY_API_URL;
+    // Check for Netlify environment variable first
+    if (window.VITE_API_URL) {
+      return window.VITE_API_URL;
     }
     
-    // Check for Netlify environment variable
-    if (window.NETLIFY_API_URL) {
-      return window.NETLIFY_API_URL;
+    // Check for environment variable (set in Netlify dashboard)
+    if (typeof process !== 'undefined' && process.env && process.env.VITE_API_URL) {
+      return process.env.VITE_API_URL;
     }
     
     // Development (localhost)
@@ -34,7 +33,10 @@ window.APP_CONFIG = {
   VERSION: '1.0.0',
   
   // Environment
-  ENV: window.location.hostname === 'localhost' ? 'development' : 'production'
+  ENV: window.location.hostname === 'localhost' ? 'development' : 'production',
+  
+  // Frontend URL (used for CORS configuration on backend)
+  FRONTEND_URL: window.location.origin
 };
 
 // Log configuration (only in development)

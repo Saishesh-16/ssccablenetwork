@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#2563eb">
+    <link rel="manifest" href="/manifest.json">
+    <title>Reports - SSC Bethigal Cable Network</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/mobile.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        [x-cloak] { display: none !important; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- Mobile Menu Overlay -->
+    <div class="mobile-menu-overlay" id="mobileMenuOverlay" onclick="toggleMobileMenu()"></div>
+    
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar Navigation -->
+        <aside id="sidebar" class="w-64 bg-white shadow-lg border-r border-gray-200 flex flex-col">
+            <!-- Logo -->
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex items-center space-x-3">
+                    <div class="flex items-center space-x-1">
+                        <span class="text-3xl font-bold text-blue-600">S</span>
+                        <span class="text-3xl font-bold text-pink-500">S</span>
+                        <span class="text-3xl font-bold text-orange-500">C</span>
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="text-xs font-semibold text-gray-900">BETHIGAL</span>
+                        <span class="text-xs text-gray-500">Cable Network</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Navigation Menu -->
+            <nav class="flex-1 p-4 space-y-2">
+                <a href="index.html" class="flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg font-medium transition-colors">
+                    <i class="fas fa-chart-line w-5"></i>
+                    <span>Dashboard</span>
+                    <i class="fas fa-chevron-right ml-auto text-sm"></i>
+                </a>
+                <a href="search.html" class="flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg font-medium transition-colors">
+                    <i class="fas fa-search w-5"></i>
+                    <span>Search Customer</span>
+                    <i class="fas fa-chevron-right ml-auto text-sm"></i>
+                </a>
+                <a href="add-customer.html" class="flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg font-medium transition-colors">
+                    <i class="fas fa-user-plus w-5"></i>
+                    <span>Add Customer</span>
+                    <i class="fas fa-chevron-right ml-auto text-sm"></i>
+                </a>
+                <a href="reports.html" class="flex items-center space-x-3 px-4 py-3 bg-blue-600 text-white rounded-lg font-medium transition-colors">
+                    <i class="fas fa-chart-bar w-5"></i>
+                    <span>Reports</span>
+                    <i class="fas fa-chevron-right ml-auto text-sm"></i>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content Area -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <!-- Top Header -->
+            <header class="bg-white shadow-sm border-b border-gray-200 px-4 sm:px-6 py-3 sm:py-4">
+                <div class="flex items-center justify-between">
+                    <button 
+                        onclick="toggleMobileMenu()" 
+                        class="lg:hidden p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors mr-3"
+                        aria-label="Toggle menu"
+                    >
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    <h1 class="text-xl sm:text-2xl font-bold text-gray-900 flex-1">Monthly Reports</h1>
+                    <div class="flex items-center space-x-2 sm:space-x-4">
+                        <button class="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+                            <i class="fas fa-bell"></i>
+                        </button>
+                        <div class="flex items-center space-x-2 sm:space-x-3">
+                            <div class="text-right mr-1 sm:mr-2 hidden sm:block">
+                                <p class="text-sm font-medium text-gray-900" id="usernameDisplay">Admin</p>
+                                <p class="text-xs text-gray-500">Logged in</p>
+                            </div>
+                            <div class="w-9 h-9 sm:w-10 sm:h-10 bg-blue-600 rounded-full flex items-center justify-center">
+                                <span class="text-white font-semibold text-sm sm:text-base" id="userInitial">A</span>
+                            </div>
+                            <button 
+                                onclick="logout()" 
+                                class="px-3 py-2 sm:px-4 text-xs sm:text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                                title="Logout"
+                            >
+                                <i class="fas fa-sign-out-alt sm:mr-2"></i>
+                                <span class="hidden sm:inline">Logout</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Content -->
+            <main class="flex-1 overflow-y-auto p-3 sm:p-6">
+                <!-- Month Selection -->
+                <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-4 sm:p-6 mb-4 sm:mb-6">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div class="flex-1">
+                            <label for="reportMonth" class="block text-sm font-medium text-gray-700 mb-2">
+                                Select Month
+                            </label>
+                            <input 
+                                type="month" 
+                                id="reportMonth" 
+                                class="block w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                                value=""
+                            >
+                        </div>
+                        <button 
+                            onclick="generateReport()" 
+                            class="w-full sm:w-auto px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 active:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors touch-manipulation"
+                        >
+                            <i class="fas fa-chart-bar mr-2"></i>Generate Report
+                        </button>
+                        <button 
+                            onclick="exportToPDF()" 
+                            id="exportPDFBtn"
+                            class="w-full sm:w-auto px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 active:bg-green-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors touch-manipulation hidden"
+                        >
+                            <i class="fas fa-file-pdf mr-2"></i>Export PDF
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Report Results -->
+                <div id="reportResults" class="hidden">
+                    <!-- Summary Cards -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-4 sm:mb-6">
+                        <!-- Total Customers -->
+                        <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-4 sm:p-6 text-white">
+                            <div class="flex items-center justify-between mb-3 sm:mb-4">
+                                <div class="bg-white bg-opacity-20 p-2 sm:p-3 rounded-lg">
+                                    <i class="fas fa-users text-xl sm:text-2xl"></i>
+                                </div>
+                            </div>
+                            <p class="text-blue-100 text-xs sm:text-sm font-medium mb-1">TOTAL CUSTOMERS</p>
+                            <p class="text-3xl sm:text-4xl font-bold" id="reportTotalCustomers">0</p>
+                        </div>
+
+                        <!-- Paid Customers -->
+                        <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg p-4 sm:p-6 text-white">
+                            <div class="flex items-center justify-between mb-3 sm:mb-4">
+                                <div class="bg-white bg-opacity-20 p-2 sm:p-3 rounded-lg">
+                                    <i class="fas fa-check-circle text-xl sm:text-2xl"></i>
+                                </div>
+                            </div>
+                            <p class="text-green-100 text-xs sm:text-sm font-medium mb-1">PAID CUSTOMERS</p>
+                            <p class="text-3xl sm:text-4xl font-bold" id="reportPaidCustomers">0</p>
+                        </div>
+
+                        <!-- Due Customers -->
+                        <div class="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-xl shadow-lg p-4 sm:p-6 text-white">
+                            <div class="flex items-center justify-between mb-3 sm:mb-4">
+                                <div class="bg-white bg-opacity-20 p-2 sm:p-3 rounded-lg">
+                                    <i class="fas fa-clock text-xl sm:text-2xl"></i>
+                                </div>
+                            </div>
+                            <p class="text-yellow-100 text-xs sm:text-sm font-medium mb-1">DUE CUSTOMERS</p>
+                            <p class="text-3xl sm:text-4xl font-bold" id="reportDueCustomers">0</p>
+                        </div>
+
+                        <!-- Total Revenue -->
+                        <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg p-4 sm:p-6 text-white">
+                            <div class="flex items-center justify-between mb-3 sm:mb-4">
+                                <div class="bg-white bg-opacity-20 p-2 sm:p-3 rounded-lg">
+                                    <i class="fas fa-rupee-sign text-xl sm:text-2xl"></i>
+                                </div>
+                            </div>
+                            <p class="text-purple-100 text-xs sm:text-sm font-medium mb-1">TOTAL REVENUE</p>
+                            <p class="text-3xl sm:text-4xl font-bold" id="reportTotalRevenue">₹0</p>
+                        </div>
+                    </div>
+
+                    <!-- Detailed Report -->
+                    <div class="bg-white rounded-xl shadow-lg border border-gray-200">
+                        <div class="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
+                            <h3 class="text-base sm:text-lg font-semibold text-gray-900">
+                                <i class="fas fa-list mr-2 text-blue-600"></i>
+                                Monthly Report Details
+                            </h3>
+                        </div>
+                        <div class="p-4 sm:p-6">
+                            <div id="reportDetails" class="space-y-4">
+                                <!-- Report content will be loaded here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Loading State -->
+                <div id="reportLoading" class="hidden text-center py-12">
+                    <i class="fas fa-spinner fa-spin text-gray-400 text-4xl mb-3"></i>
+                    <p class="text-gray-600 font-medium">Generating report...</p>
+                </div>
+
+                <!-- Empty State -->
+                <div id="reportEmpty" class="text-center py-12">
+                    <i class="fas fa-chart-bar text-gray-400 text-4xl mb-3"></i>
+                    <p class="text-gray-600 font-medium">Select a month to generate report</p>
+                    <p class="text-gray-500 text-sm mt-1">Choose a month and click "Generate Report"</p>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/reports.js"></script>
+    <script src="js/mobile.js"></script>
+    <script src="js/pwa.js"></script>
+</body>
+</html>
+

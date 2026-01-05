@@ -5,26 +5,19 @@
 
 window.APP_CONFIG = {
   // API Base URL - Update this for production
-  // For Netlify: Set VITE_API_URL in Netlify dashboard under Build & Deploy > Environment
+  // For Netlify: Uses Netlify Function proxy to bypass CORS
   API_URL: (() => {
-    // Check for Netlify environment variable first
-    if (window.VITE_API_URL) {
-      return window.VITE_API_URL;
-    }
-    
-    // Check for environment variable (set in Netlify dashboard)
-    if (typeof process !== 'undefined' && process.env && process.env.VITE_API_URL) {
-      return process.env.VITE_API_URL;
-    }
-    
     // Development (localhost)
     if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
       return 'http://localhost:3000/api';
     }
     
-    // Production - Render backend URL
-    return 'https://ssccablenetworkbackend.onrender.com/api';
+    // Production - Use Netlify Function proxy
+    return '/.netlify/functions/proxy';
   })(),
+  
+  // Actual backend URL (used in the Netlify function)
+  BACKEND_URL: 'https://ssccablenetworkbackend.onrender.com/api',
   
   // App Name
   APP_NAME: 'SSC Bethigal Cable Network',

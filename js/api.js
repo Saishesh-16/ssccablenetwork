@@ -20,7 +20,14 @@ if (window.APP_CONFIG && window.APP_CONFIG.API_URL) {
  */
 async function apiRequest(endpoint, options = {}) {
     try {
-        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+        let url = `${API_BASE_URL}${endpoint}`;
+        
+        // For Netlify Function proxy, add path as query parameter
+        if (API_BASE_URL.includes('/.netlify/functions/proxy')) {
+            url = `${API_BASE_URL}?path=${encodeURIComponent(endpoint)}`;
+        }
+        
+        const response = await fetch(url, {
             method: options.method || 'GET',
             headers: {
                 'Content-Type': 'application/json',

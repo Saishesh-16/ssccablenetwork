@@ -78,15 +78,22 @@
     /* Dashboard hero banner tweaks to avoid horizontal scroll */
     .pro-banner {
         padding: 1.75rem 1.25rem !important;
+        border-radius: 1.25rem !important;
     }
 
-    .pro-banner span.text-4xl {
-        font-size: 1.9rem !important;
+    /* Logo letters a bit smaller */
+    .pro-banner span.text-4xl,
+    .pro-banner span.text-5xl {
+        font-size: 1.8rem !important;
     }
 
+    /* Ensure banner heading wraps cleanly on small screens */
     .pro-banner h3 {
-        font-size: 1.4rem !important;
-        line-height: 1.25;
+        font-size: 1.35rem !important;
+        line-height: 1.25 !important;
+        word-break: break-word;
+        white-space: normal !important;
+        max-width: 11.5rem;
     }
     
     /* Optimize grid layouts */

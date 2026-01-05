@@ -23,10 +23,8 @@ window.APP_CONFIG = {
       return 'http://localhost:3000/api';
     }
     
-    // Production - Update this with your actual backend URL
-    // Example: 'https://your-backend.herokuapp.com/api'
-    // Example: 'https://api.your-domain.com/api'
-    return 'https://your-backend-url.com/api'; // ⚠️ UPDATE THIS!
+    // Production - Render backend URL
+    return 'https://ssccablenetworkbackend.onrender.com/api';
   })(),
   
   // App Name

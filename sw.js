@@ -55,6 +55,14 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
+/* ================= MESSAGE ================= */
+
+self.addEventListener('message', (event) => {
+  if (event && event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
 /* ================= FETCH ================= */
 
 self.addEventListener('fetch', (event) => {
@@ -78,22 +86,17 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // ✅ Cache-first for assets
+  // ✅ Network-first for same-origin assets
   event.respondWith(
-    caches.match(request).then((cached) => {
-      if (cached) return cached;
-
-      return fetch(request).then((response) => {
-        if (!response || response.status !== 200) return response;
-
-        const copy = response.clone();
-        caches.open(ASSET_CACHE).then((cache) => {
-          cache.put(request, copy);
-        });
-
+    fetch(request)
+      .then((response) => {
+        if (response && response.status === 200) {
+          const copy = response.clone();
+          caches.open(ASSET_CACHE).then((cache) => cache.put(request, copy));
+        }
         return response;
-      });
-    })
+      })
+      .catch(() => caches.match(request))
   );
 });
 

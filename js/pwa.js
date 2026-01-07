@@ -1,82 +1,76 @@
 /**
  * Progressive Web App (PWA) Setup
- * Handles service worker registration and PWA features
+ * FIXED: Reliable service worker updates on mobile
  */
 
-// Register Service Worker
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
-      .then((registration) => {
-        console.log('✅ Service Worker registered:', registration.scope);
-        
-        // Check for updates
-        registration.addEventListener('updatefound', () => {
-          const newWorker = registration.installing;
-          newWorker.addEventListener('statechange', () => {
-            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              // New service worker available
-              if (confirm('New version available! Reload to update?')) {
-                window.location.reload();
-              }
-            }
-          });
+  window.addEventListener('load', async () => {
+    try {
+      const registration = await navigator.serviceWorker.register('/sw.js');
+      console.log('✅ Service Worker registered:', registration.scope);
+
+      // 🔴 Force update check every page load
+      registration.update();
+
+      // If a new SW is already waiting, activate it
+      if (registration.waiting) {
+        registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+      }
+
+      // Listen for new SW installation
+      registration.addEventListener('updatefound', () => {
+        const newWorker = registration.installing;
+
+        newWorker.addEventListener('statechange', () => {
+          if (
+            newWorker.state === 'installed' &&
+            navigator.serviceWorker.controller
+          ) {
+            // 🔴 Auto reload when new version is ready
+            window.location.reload();
+          }
         });
-      })
-      .catch((error) => {
-        console.log('❌ Service Worker registration failed:', error);
       });
 
-    // Listen for service worker updates
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
-      window.location.reload();
-    });
+      // Reload when new SW takes control
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        window.location.reload();
+      });
+
+    } catch (error) {
+      console.error('❌ Service Worker registration failed:', error);
+    }
   });
 }
 
-// Handle install prompt
+/* ================= INSTALL PROMPT ================= */
+
 let deferredPrompt;
+
 window.addEventListener('beforeinstallprompt', (e) => {
-  // Prevent the mini-infobar from appearing
   e.preventDefault();
-  // Stash the event so it can be triggered later
   deferredPrompt = e;
-  // Show custom install button (optional)
-  showInstallButton();
+  console.log('📲 App can be installed');
 });
 
-// Show install button
-function showInstallButton() {
-  // You can add a custom install button to your UI here
-  console.log('App can be installed');
-}
-
-// Install app
 window.installApp = async () => {
-  if (!deferredPrompt) {
-    return;
-  }
-  
-  // Show the install prompt
+  if (!deferredPrompt) return;
+
   deferredPrompt.prompt();
-  
-  // Wait for the user to respond
-  const { outcome } = await deferredPrompt.userChoice;
-  console.log(`User response to install prompt: ${outcome}`);
-  
-  // Clear the deferredPrompt
+  await deferredPrompt.userChoice;
   deferredPrompt = null;
 };
 
-// Check if app is installed
+/* ================= INSTALL STATUS ================= */
+
 window.isAppInstalled = () => {
-  return window.matchMedia('(display-mode: standalone)').matches ||
-         window.navigator.standalone ||
-         document.referrer.includes('android-app://');
+  return (
+    window.matchMedia('(display-mode: standalone)').matches ||
+    window.navigator.standalone ||
+    document.referrer.includes('android-app://')
+  );
 };
 
-// Log installation status
 if (window.isAppInstalled()) {
-  console.log('📱 App is installed as PWA');
+  console.log('📱 App is running as installed PWA');
 }
-

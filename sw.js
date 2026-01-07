@@ -1,12 +1,14 @@
 /**
  * Service Worker for SSC Bethigal Cable Network
- * Provides offline support and caching
+ * FIXED: No stale cache, mobile updates work correctly
  */
 
-const CACHE_NAME = 'ssc-bethigal-v1';
-const RUNTIME_CACHE = 'ssc-bethigal-runtime-v1';
+const CACHE_VERSION = 'v3'; // 🔴 change this when UI changes
+const STATIC_CACHE = `ssc-bethigal-static-${CACHE_VERSION}`;
+const RUNTIME_CACHE = `ssc-bethigal-runtime-${CACHE_VERSION}`;
 
-// Assets to cache on install
+/* ================= STATIC ASSETS (LOCAL ONLY) ================= */
+
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -14,8 +16,12 @@ const STATIC_ASSETS = [
   '/search.html',
   '/add-customer.html',
   '/reports.html',
+
+  // CSS (LOCAL)
   '/css/mobile.css',
   '/css/style.css',
+
+  // JS (LOCAL)
   '/js/api.js',
   '/js/auth.js',
   '/js/dashboard.js',
@@ -24,107 +30,98 @@ const STATIC_ASSETS = [
   '/js/reports.js',
   '/js/search.js',
   '/js/add-customer.js',
-  '/assets/logo.svg',
-  'https://cdn.tailwindcss.com',
-  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
-  'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap'
+
+  // Images / assets
+  '/assets/logo.svg'
 ];
 
-// Install event - cache static assets
-self.addEventListener('install', (event) => {
-  console.log('[Service Worker] Installing...');
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => {
-        console.log('[Service Worker] Caching static assets');
-        return cache.addAll(STATIC_ASSETS.filter(url => {
-          // Only cache local assets, skip external URLs that might fail
-          return !url.startsWith('http');
-        }));
-      })
-      .catch((error) => {
-        console.log('[Service Worker] Cache install failed:', error);
-      })
-  );
-  self.skipWaiting();
-});
+/* ================= INSTALL ================= */
 
-// Activate event - clean up old caches
-self.addEventListener('activate', (event) => {
-  console.log('[Service Worker] Activating...');
+self.addEventListener('install', (event) => {
+  console.log('[SW] Installing new version...');
+  self.skipWaiting();
+
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME && cacheName !== RUNTIME_CACHE) {
-            console.log('[Service Worker] Deleting old cache:', cacheName);
-            return caches.delete(cacheName);
-          }
-        })
-      );
+    caches.open(STATIC_CACHE).then((cache) => {
+      return cache.addAll(STATIC_ASSETS);
     })
   );
-  return self.clients.claim();
 });
 
-// Fetch event - serve from cache, fallback to network
+/* ================= ACTIVATE ================= */
+
+self.addEventListener('activate', (event) => {
+  console.log('[SW] Activating...');
+  event.waitUntil(
+    caches.keys().then((keys) =>
+      Promise.all(
+        keys.map((key) => {
+          if (key !== STATIC_CACHE && key !== RUNTIME_CACHE) {
+            console.log('[SW] Removing old cache:', key);
+            return caches.delete(key);
+          }
+        })
+      )
+    )
+  );
+
+  self.clients.claim();
+});
+
+/* ================= FETCH ================= */
+
 self.addEventListener('fetch', (event) => {
-  // Skip non-GET requests
-  if (event.request.method !== 'GET') {
-    return;
-  }
+  const request = event.request;
 
-  // Skip API requests - always fetch from network
-  if (event.request.url.includes('/api/')) {
-    return;
-  }
+  // Only GET requests
+  if (request.method !== 'GET') return;
 
-  event.respondWith(
-    caches.match(event.request)
-      .then((cachedResponse) => {
-        // Return cached version if available
-        if (cachedResponse) {
-          return cachedResponse;
-        }
+  // 🚫 NEVER cache API calls
+  if (request.url.includes('/api/')) return;
 
-        // Otherwise fetch from network
-        return fetch(event.request)
-          .then((response) => {
-            // Don't cache if not a valid response
-            if (!response || response.status !== 200 || response.type !== 'basic') {
-              return response;
-            }
+  // 🚫 NEVER cache external CDN (Tailwind, FontAwesome, Google Fonts)
+  if (!request.url.startsWith(self.location.origin)) return;
 
-            // Clone the response
-            const responseToCache = response.clone();
-
-            // Cache the fetched response
-            caches.open(RUNTIME_CACHE)
-              .then((cache) => {
-                cache.put(event.request, responseToCache);
-              });
-
-            return response;
-          })
-          .catch(() => {
-            // If network fails and it's a navigation request, return offline page
-            if (event.request.mode === 'navigate') {
-              return caches.match('/index.html');
-            }
+  // 🔴 HTML pages → Network First (prevents stale UI)
+  if (request.mode === 'navigate') {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          const copy = response.clone();
+          caches.open(RUNTIME_CACHE).then((cache) => {
+            cache.put(request, copy);
           });
-      })
+          return response;
+        })
+        .catch(() => caches.match('/index.html'))
+    );
+    return;
+  }
+
+  // CSS / JS / Images → Cache First
+  event.respondWith(
+    caches.match(request).then((cached) => {
+      if (cached) return cached;
+
+      return fetch(request).then((response) => {
+        if (!response || response.status !== 200) return response;
+
+        const copy = response.clone();
+        caches.open(RUNTIME_CACHE).then((cache) => {
+          cache.put(request, copy);
+        });
+
+        return response;
+      });
+    })
   );
 });
 
-// Handle push notifications (for future use)
-self.addEventListener('push', (event) => {
-  console.log('[Service Worker] Push notification received');
-  // Future implementation
-});
+/* ================= SKIP WAITING SUPPORT ================= */
 
-// Handle background sync (for future use)
-self.addEventListener('sync', (event) => {
-  console.log('[Service Worker] Background sync:', event.tag);
-  // Future implementation
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    console.log('[SW] Skip waiting received');
+    self.skipWaiting();
+  }
 });
-

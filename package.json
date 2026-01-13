@@ -1,0 +1,17 @@
+{
+  "name": "ssc-cable-network",
+  "version": "1.0.0",
+  "description": "SSC Bethigal Cable Network Management System",
+  "scripts": {
+    "dev": "netlify dev",
+    "build": "echo 'No build required'"
+  },
+  "dependencies": {
+    "node-fetch": "^2.7.0"
+  },
+  "devDependencies": {},
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
+

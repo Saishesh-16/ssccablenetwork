@@ -4,36 +4,35 @@
  */
 
 window.APP_CONFIG = {
-  // API Base URL - Update this for production
-  // For Netlify: Uses Netlify Function proxy to bypass CORS
+  // ✅ API Base URL
   API_URL: (() => {
     // Development (localhost)
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-      return 'http://localhost:3000/api';
+    if (
+      window.location.hostname === "localhost" ||
+      window.location.hostname === "127.0.0.1"
+    ) {
+      return "http://localhost:3000/api";
     }
-    
-    // Production - Use Netlify Function proxy
-    return '/.netlify/functions/proxy';
+
+    // ✅ Production - Direct Render backend
+    return "https://ssccablenetworkbackend.onrender.com/api";
   })(),
-  
-  // Actual backend URL (used in the Netlify function)
-  BACKEND_URL: 'https://ssccablenetworkbackend.onrender.com/api',
-  
-  // App Name
-  APP_NAME: 'SSC Bethigal Cable Network',
-  
-  // Version
-  VERSION: '1.0.0',
-  
-  // Environment
-  ENV: window.location.hostname === 'localhost' ? 'development' : 'production',
-  
-  // Frontend URL (used for CORS configuration on backend)
+
+  // Backend URL (same as API_URL now)
+  BACKEND_URL: "https://ssccablenetworkbackend.onrender.com/api",
+
+  APP_NAME: "SSC Bethigal Cable Network",
+  VERSION: "1.0.0",
+
+  ENV:
+    window.location.hostname === "localhost"
+      ? "development"
+      : "production",
+
   FRONTEND_URL: window.location.origin
 };
 
 // Log configuration (only in development)
-if (window.APP_CONFIG.ENV === 'development') {
-  console.log('📱 App Configuration:', window.APP_CONFIG);
+if (window.APP_CONFIG.ENV === "development") {
+  console.log("📱 App Configuration:", window.APP_CONFIG);
 }
-

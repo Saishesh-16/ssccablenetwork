@@ -90,7 +90,9 @@ function calculateMonthlyReport(customers, year, month) {
         const nextDueDate = customer.nextDueDate ? new Date(customer.nextDueDate) : null;
         
         // Check if customer paid in this month
-        if (lastPaidDate && lastPaidDate >= startDate && lastPaidDate <= endDate) {
+        // IMPORTANT: Only count customers whose current status is actually "Paid"
+        // This keeps the "Paid Customers" count in Reports in sync with the Dashboard.
+        if (customer.status === 'Paid' && lastPaidDate && lastPaidDate >= startDate && lastPaidDate <= endDate) {
             paidCustomers.push(customer);
             // Calculate revenue based on payment plan
             if (customer.paymentPlan === 'Monthly') {

@@ -230,13 +230,13 @@ function displaySearchResults(customers) {
                 ` : ''}
                 <div class="flex flex-col sm:flex-row gap-2">
                     <button 
-                        onclick="markPayment('${customer._id}')" 
+                        onclick="openStatusDateModal('paid', '${customer._id}')" 
                         class="w-full sm:flex-1 px-4 py-3 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 active:bg-green-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors touch-manipulation"
                     >
                         <i class="fas fa-check mr-2"></i>Mark Paid
                     </button>
                     <button 
-                        onclick="markDueActive('${customer._id}')" 
+                        onclick="openStatusDateModal('due', '${customer._id}')" 
                         class="w-full sm:flex-1 px-4 py-3 bg-yellow-600 text-white text-sm font-medium rounded-lg hover:bg-yellow-700 active:bg-yellow-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 transition-colors touch-manipulation"
                     >
                         <i class="fas fa-clock mr-2"></i>Mark Due
@@ -289,73 +289,133 @@ async function loadCustomerById(id) {
 }
 
 /**
- * Mark customer as paid
+ * Status date modal state
  */
-async function markPayment(customerId) {
+let statusModalCustomerId = null;
+let statusModalAction = null; // 'paid' or 'due'
+
+/**
+ * Open status date modal (better UI with calendar input)
+ */
+function openStatusDateModal(action, customerId) {
+    statusModalCustomerId = customerId;
+    statusModalAction = action;
+
+    const modal = document.getElementById('statusDateModal');
+    const title = document.getElementById('statusDateModalTitle');
+    const help = document.getElementById('statusDateHelp');
+    const dateInput = document.getElementById('statusDateInput');
+
     const today = new Date().toISOString().split('T')[0];
-    
-    if (confirm('Mark this customer as paid today?')) {
-        try {
-            // First get customer to know their payment plan
-            const customerResponse = await CustomerAPI.getById(customerId);
-            if (!customerResponse.success) {
-                throw new Error('Failed to load customer details');
-            }
-            
-            const customer = customerResponse.data;
-            const paymentData = {
-                paymentDate: today,
-                status: 'Paid',
-                paymentPlan: customer.paymentPlan
-            };
-            
-            const response = await CustomerAPI.updatePayment(customerId, paymentData);
-            
-            if (response.success) {
-                alert('Payment marked successfully!');
-                // Refresh search results
-                const searchInput = document.getElementById('searchInput');
-                if (searchInput.value.trim()) {
-                    searchCustomers();
-                } else {
-                    // Reload all customers
-                    loadAllCustomers();
-                }
-            }
-        } catch (error) {
-            console.error('Error marking payment:', error);
-            alert(`Error: ${error.message}`);
+    dateInput.value = today;
+
+    if (action === 'paid') {
+        title.textContent = 'Mark as Paid';
+        help.textContent = 'Choose the actual payment date. This date will be used for history and next due date.';
+    } else {
+        title.textContent = 'Mark as Due';
+        help.textContent = 'Choose the last payment date. Status will be set to Due but Active without changing that last payment date.';
+    }
+
+    modal.classList.remove('hidden');
+}
+
+function closeStatusDateModal() {
+    const modal = document.getElementById('statusDateModal');
+    modal.classList.add('hidden');
+    statusModalCustomerId = null;
+    statusModalAction = null;
+}
+
+async function confirmStatusDate() {
+    const dateInput = document.getElementById('statusDateInput');
+    const selectedDate = dateInput.value;
+
+    if (!selectedDate) {
+        alert('Please select a date.');
+        return;
+    }
+
+    if (!statusModalCustomerId || !statusModalAction) {
+        closeStatusDateModal();
+        return;
+    }
+
+    if (statusModalAction === 'paid') {
+        await markPayment(statusModalCustomerId, selectedDate);
+    } else {
+        await markDueActive(statusModalCustomerId, selectedDate);
+    }
+
+    closeStatusDateModal();
+}
+
+/**
+ * Mark customer as paid (uses date from modal)
+ */
+async function markPayment(customerId, paymentDate) {
+    try {
+        // First get customer to know their payment plan
+        const customerResponse = await CustomerAPI.getById(customerId);
+        if (!customerResponse.success) {
+            throw new Error('Failed to load customer details');
         }
+        
+        const customer = customerResponse.data;
+        const paymentData = {
+            paymentDate,
+            status: 'Paid',
+            paymentPlan: customer.paymentPlan
+        };
+        
+        const response = await CustomerAPI.updatePayment(customerId, paymentData);
+        
+        if (response.success) {
+            alert('Payment marked successfully!');
+            // Refresh search results
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput.value.trim()) {
+                searchCustomers();
+            } else {
+                // Reload all customers
+                loadAllCustomers();
+            }
+        }
+    } catch (error) {
+        console.error('Error marking payment:', error);
+        alert(`Error: ${error.message}`);
     }
 }
 
 /**
- * Mark customer as due but active
+ * Mark customer as due but active (uses date from modal)
+ * NOTE: Backend should NOT change lastPaidDate when status is 'Due but Active'.
  */
-async function markDueActive(customerId) {
-    if (confirm('Mark this customer as Due but Active?')) {
-        try {
-            const paymentData = {
-                status: 'Due but Active'
-            };
-            
-            const response = await CustomerAPI.updatePayment(customerId, paymentData);
-            
-            if (response.success) {
-                alert('Status updated successfully!');
-                // Refresh search results
-                const searchInput = document.getElementById('searchInput');
-                if (searchInput.value.trim()) {
-                    searchCustomers();
-                } else {
-                    // Reload all customers
-                    loadAllCustomers();
-                }
+async function markDueActive(customerId, lastPaidDate) {
+    try {
+        const paymentData = {
+            status: 'Due but Active',
+            // We send lastPaidDate so backend can use it for logic if needed,
+            // but controller should NOT overwrite customer.lastPaidDate with this.
+            paymentDate: lastPaidDate
+        };
+        
+        const response = await CustomerAPI.updatePayment(customerId, paymentData);
+        
+        if (response.success) {
+            alert('Status updated successfully!');
+            // Refresh search results
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput.value.trim()) {
+                searchCustomers();
+            } else {
+                // Reload all customers
+                loadAllCustomers();
             }
-        } catch (error) {
-            console.error('Error updating status:', error);
-            alert(`Error: ${error.message}`);
         }
+    } catch (error) {
+        console.error('Error updating status:', error);
+        alert(`Error: ${error.message}`);
     }
 }
 

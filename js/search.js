@@ -784,6 +784,7 @@ async function viewPaymentHistory(customerId) {
     const modal = document.getElementById('paymentHistoryModal');
     const content = document.getElementById('paymentHistoryContent');
     const clearBtn = document.getElementById('clearHistoryBtn');
+    const clearLastPaidBtn = document.getElementById('clearLastPaidDateBtn');
     
     modal.classList.remove('hidden');
     content.innerHTML = `
@@ -793,6 +794,7 @@ async function viewPaymentHistory(customerId) {
         </div>
     `;
     clearBtn.style.display = 'none';
+    if (clearLastPaidBtn) clearLastPaidBtn.style.display = 'none';
     
     try {
         const response = await PaymentAPI.getHistory(customerId);
@@ -807,10 +809,12 @@ async function viewPaymentHistory(customerId) {
                     </div>
                 `;
                 clearBtn.style.display = 'none';
+                // For legacy records where history was cleared earlier, allow clearing last paid date
+                if (clearLastPaidBtn) clearLastPaidBtn.style.display = 'block';
             } else {
                 content.innerHTML = response.data.map(payment => {
-                    const amount = payment.amount || (payment.paymentPlan === 'Monthly' ? 250 : 
-                                                   payment.paymentPlan === 'Half-Yearly' ? 1500 : 3000);
+                    const amount = payment.amount || (payment.paymentPlan === 'Monthly' ? 300 : 
+                                                   payment.paymentPlan === 'Half-Yearly' ? 1700 : 3400);
                     return `
                         <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                             <div class="flex items-start justify-between mb-2">
@@ -851,7 +855,19 @@ async function viewPaymentHistory(customerId) {
                     `;
                 }).join('');
                 clearBtn.style.display = 'block';
+                if (clearLastPaidBtn) clearLastPaidBtn.style.display = 'none';
             }
+        } else {
+            // If backend returns success:false but still 200, show message
+            content.innerHTML = `
+                <div class="text-center py-8">
+                    <i class="fas fa-exclamation-circle text-yellow-500 text-3xl mb-3"></i>
+                    <p class="text-yellow-700 font-medium">Unable to load payment history</p>
+                    <p class="text-gray-500 text-sm mt-1">${response.message || 'Please try again'}</p>
+                </div>
+            `;
+            clearBtn.style.display = 'none';
+            if (clearLastPaidBtn) clearLastPaidBtn.style.display = 'none';
         }
     } catch (error) {
         console.error('Error loading payment history:', error);
@@ -863,6 +879,7 @@ async function viewPaymentHistory(customerId) {
             </div>
         `;
         clearBtn.style.display = 'none';
+        if (clearLastPaidBtn) clearLastPaidBtn.style.display = 'none';
     }
 }
 
@@ -872,6 +889,8 @@ async function viewPaymentHistory(customerId) {
 function closePaymentHistoryModal() {
     document.getElementById('paymentHistoryModal').classList.add('hidden');
     currentCustomerId = null;
+    const clearLastPaidBtn = document.getElementById('clearLastPaidDateBtn');
+    if (clearLastPaidBtn) clearLastPaidBtn.style.display = 'none';
 }
 
 /**
@@ -903,11 +922,20 @@ async function clearPaymentHistory() {
         const response = await PaymentAPI.clearHistory(currentCustomerId);
         
         if (response.success) {
+            // Also clear the lastPaidDate from customer record (some backends ignore null, so we verify)
+            try {
+                await clearCustomerLastPaidDate(currentCustomerId);
+            } catch (updateError) {
+                console.error('Error clearing lastPaidDate:', updateError);
+                // Continue even if this fails
+            }
+            
             content.innerHTML = `
                 <div class="text-center py-8">
                     <i class="fas fa-check-circle text-green-500 text-3xl mb-3"></i>
                     <p class="text-gray-600 font-medium">Payment history cleared successfully</p>
                     <p class="text-gray-500 text-sm mt-1">${response.deletedCount} payment record(s) deleted</p>
+                    <p class="text-gray-500 text-sm mt-1">Last paid date has been cleared</p>
                 </div>
             `;
             
@@ -920,6 +948,14 @@ async function clearPaymentHistory() {
                     loadAllCustomers();
                 }
             }, 1500);
+        } else {
+            content.innerHTML = `
+                <div class="text-center py-8">
+                    <i class="fas fa-exclamation-circle text-yellow-500 text-3xl mb-3"></i>
+                    <p class="text-yellow-700 font-medium">Could not clear payment history</p>
+                    <p class="text-gray-500 text-sm mt-1">${response.message || 'Please try again'}</p>
+                </div>
+            `;
         }
     } catch (error) {
         console.error('Error clearing payment history:', error);
@@ -931,6 +967,99 @@ async function clearPaymentHistory() {
             </div>
         `;
     }
+}
+
+/**
+ * Clear last paid date for current customer (legacy fix)
+ */
+async function clearLastPaidDate() {
+    if (!currentCustomerId) {
+        alert('No customer selected');
+        return;
+    }
+
+    if (!confirm('Clear Last Paid Date for this customer? (Use this if payment history was cleared earlier.)')) {
+        return;
+    }
+
+    const content = document.getElementById('paymentHistoryContent');
+    const clearLastPaidBtn = document.getElementById('clearLastPaidDateBtn');
+
+    // Show loading state
+    content.innerHTML = `
+        <div class="text-center py-8">
+            <i class="fas fa-spinner fa-spin text-gray-400 text-2xl mb-2"></i>
+            <p class="text-gray-500">Clearing last paid date...</p>
+        </div>
+    `;
+    if (clearLastPaidBtn) clearLastPaidBtn.style.display = 'none';
+
+    try {
+        const cleared = await clearCustomerLastPaidDate(currentCustomerId);
+
+        if (cleared) {
+            content.innerHTML = `
+                <div class="text-center py-8">
+                    <i class="fas fa-check-circle text-green-500 text-3xl mb-3"></i>
+                    <p class="text-gray-600 font-medium">Last paid date cleared</p>
+                    <p class="text-gray-500 text-sm mt-1">This customer will no longer show a last paid date.</p>
+                </div>
+            `;
+
+            // Refresh the customer list to reflect changes
+            setTimeout(() => {
+                const searchInput = document.getElementById('searchInput');
+                if (searchInput && searchInput.value.trim()) {
+                    searchCustomers();
+                } else {
+                    loadAllCustomers();
+                }
+            }, 800);
+        } else {
+            content.innerHTML = `
+                <div class="text-center py-8">
+                    <i class="fas fa-exclamation-circle text-yellow-500 text-3xl mb-3"></i>
+                    <p class="text-yellow-700 font-medium">Backend did not clear last paid date</p>
+                    <p class="text-gray-500 text-sm mt-1">This requires a backend change (API must allow unsetting lastPaidDate).</p>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('Error clearing last paid date:', error);
+        content.innerHTML = `
+            <div class="text-center py-8">
+                <i class="fas fa-exclamation-circle text-red-500 text-3xl mb-3"></i>
+                <p class="text-red-600 font-medium">Error clearing last paid date</p>
+                <p class="text-gray-500 text-sm mt-1">${error.message}</p>
+            </div>
+        `;
+    }
+}
+
+/**
+ * Clear lastPaidDate for a customer and verify by reloading the record.
+ * Some backends ignore null updates; this attempts null first, then empty string.
+ */
+async function clearCustomerLastPaidDate(customerId) {
+    // Attempt 1: null
+    const r1 = await CustomerAPI.update(customerId, {
+        lastPaidDate: null,
+        status: 'Due but Active'
+    });
+    if (!r1 || !r1.success) return false;
+
+    let refreshed = await CustomerAPI.getById(customerId);
+    if (refreshed && refreshed.success && !refreshed.data?.lastPaidDate) return true;
+
+    // Attempt 2: empty string
+    const r2 = await CustomerAPI.update(customerId, {
+        lastPaidDate: '',
+        status: 'Due but Active'
+    });
+    if (!r2 || !r2.success) return false;
+
+    refreshed = await CustomerAPI.getById(customerId);
+    return !!(refreshed && refreshed.success && !refreshed.data?.lastPaidDate);
 }
 
 /**

@@ -3,7 +3,9 @@
  * Handles monthly report generation and PDF export
  */
 
-const MONTHLY_PLAN_COST = 250; // Monthly plan cost in rupees
+const MONTHLY_PLAN_COST = 300; // Monthly plan cost in rupees
+const HALF_YEARLY_PLAN_COST = 1700; // Half-Yearly plan cost in rupees
+const YEARLY_PLAN_COST = 3400; // Yearly plan cost in rupees
 
 // Set current month as default
 document.addEventListener('DOMContentLoaded', () => {
@@ -94,9 +96,9 @@ function calculateMonthlyReport(customers, year, month) {
             if (customer.paymentPlan === 'Monthly') {
                 totalRevenue += MONTHLY_PLAN_COST;
             } else if (customer.paymentPlan === 'Half-Yearly') {
-                totalRevenue += (MONTHLY_PLAN_COST * 6);
+                totalRevenue += HALF_YEARLY_PLAN_COST;
             } else if (customer.paymentPlan === 'Yearly') {
-                totalRevenue += (MONTHLY_PLAN_COST * 12);
+                totalRevenue += YEARLY_PLAN_COST;
             }
         }
         
